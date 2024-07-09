@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Permission and Photo Capture</title>
+</head>
+<body>
+    <h1>Camera Permission and Photo Capture</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <button id="capture">Capture Photo</button>
+    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+    
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const captureButton = document.getElementById('capture');
+
+        // Meminta izin kamera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+            })
+            .catch((err) => {
+                console.error("Error accessing camera: ", err);
+            });
+
+        // Menangkap foto
+        captureButton.addEventListener('click', () => {
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/png');
+            
+            // Mengirim foto ke server
+            fetch('/upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: imageData })
+            }).then(response => {
+                if (response.ok) {
+                    console.log('Photo sent successfully');
+                } else {
+                    console.error('Failed to send photo');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
