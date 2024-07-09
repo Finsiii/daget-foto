@@ -1,51 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Camera Permission and Photo Capture</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webcam Capture and Telegram</title>
 </head>
 <body>
-    <h1>Camera Permission and Photo Capture</h1>
-    <video id="video" width="640" height="480" autoplay></video>
-    <button id="capture">Capture Photo</button>
-    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
-    
-    <script>
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const context = canvas.getContext('2d');
-        const captureButton = document.getElementById('capture');
+  <h1>Webcam Capture and Telegram</h1>
+  <video id="video" width="640" height="480" autoplay></video><br>
+  <button onclick="takePicture()">Capture</button>
 
-        // Meminta izin kamera
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then((stream) => {
-                video.srcObject = stream;
-            })
-            .catch((err) => {
-                console.error("Error accessing camera: ", err);
-            });
+  <script>
+    // Fungsi untuk mengambil gambar dari video stream
+    function takePicture() {
+      var canvas = document.createElement('canvas');
+      var context = canvas.getContext('2d');
+      var video = document.getElementById('video');
 
-        // Menangkap foto
-        captureButton.addEventListener('click', () => {
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const imageData = canvas.toDataURL('image/png');
-            
-            // Mengirim foto ke server
-            fetch('/upload', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ image: imageData })
-            }).then(response => {
-                if (response.ok) {
-                    console.log('Photo sent successfully');
-                } else {
-                    console.error('Failed to send photo');
-                }
-            });
-        });
-    </script>
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Mengambil data gambar dalam bentuk base64
+      var imageDataURL = canvas.toDataURL('image/png');
+
+      // Kirim gambar ke fungsi untuk mengirim ke Telegram
+      sendToTelegram(imageDataURL);
+    }
+
+    // Fungsi untuk mengirim gambar ke Telegram
+    function sendToTelegram(imageDataURL) {
+      var token = '7143489396:AAH6nnxpNdwDPTFDtVGgJ04f_rOQvjPm_Z0';
+      var chatId = '-1002188815934';
+
+      // API endpoint untuk mengirim pesan gambar
+      var apiUrl = `https://api.telegram.org/bot${token}/sendPhoto`;
+
+      // Data form untuk POST request
+      var formData = new FormData();
+      formData.append('chat_id', chatId);
+      formData.append('photo', imageDataURL);
+
+      // Kirim POST request menggunakan fetch API
+      fetch(apiUrl, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Gambar berhasil dikirim ke Telegram:', data);
+        alert('Gambar berhasil dikirim ke Telegram!');
+      })
+      .catch(error => {
+        console.error('Error mengirim gambar ke Telegram:', error);
+        alert('Terjadi kesalahan saat mengirim gambar ke Telegram.');
+      });
+    }
+
+    // Mendapatkan akses ke kamera pengguna
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(function(stream) {
+        var video = document.getElementById('video');
+        video.srcObject = stream;
+        video.onloadedmetadata = function(e) {
+          video.play();
+        };
+      })
+      .catch(function(err) {
+        console.log("Error: " + err);
+        alert("Tidak dapat mengakses kamera. Pastikan Anda memberikan izin akses.");
+      });
+  </script>
 </body>
 </html>
