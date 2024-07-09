@@ -15,12 +15,12 @@
       var chatId = '-1002188815934';
 
       // API endpoint untuk mengirim pesan gambar
-      var apiUrl = `https://api.telegram.org/bot${token}/api#sendphoto`;
+      var apiUrl = `https://api.telegram.org/bot${token}/sendPhoto`;
 
-      // Data form untuk POST request
+      // Buat form data untuk POST request
       var formData = new FormData();
       formData.append('chat_id', chatId);
-      formData.append('photo', imageDataURL);
+      formData.append('photo', imageDataURL, 'photo.png'); // Nama file disertakan untuk photo
 
       // Kirim POST request menggunakan fetch API
       fetch(apiUrl, {
